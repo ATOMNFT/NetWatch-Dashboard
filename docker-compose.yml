@@ -1,0 +1,9 @@
+version: "3.8"
+services:
+  netwatch:
+    image: ghcr.io/ATOMNFT/netwatch-dashboard:v1
+    container_name: netwatch-dashboard
+    network_mode: host
+    restart: unless-stopped
+    volumes:
+      - ./data:/app/data
