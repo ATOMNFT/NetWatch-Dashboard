@@ -2,7 +2,7 @@
 
 NetWatch-Dashboard is a lightweight local network visibility and review tool built for self-hosting with Docker. It provides a clean web UI for discovering hosts, reviewing open ports and detected services, applying lightweight enrichment, exporting results to CSV, and running recurring scans on your internal network.
 
-![NetWatch Dashboard Overview](./docs/images/dashboard-overview.png)
+<img src="./docs/images/dashboard-overview.png" alt="NetWatch Dashboard Overview" width="80%" />
 
 ## What it does
 
@@ -45,7 +45,7 @@ The main dashboard provides:
 - live console output
 - CSV export
 
-![Dashboard Main View](./docs/images/dashboard-main.png)
+<img src="./docs/images/dashboard-main.png" alt="NetWatch Dashboard Main Overview" width="80%" />
 
 ### Settings
 
@@ -57,7 +57,8 @@ The Settings page allows you to configure:
 - recurring scan interval
 - persisted local settings
 
-![Settings View](./docs/images/settings-view.png)
+![Settings View](./docs/images/)
+<img src="./docs/images/settings-view.png" alt="Settings View" width="80%" />
 
 ## Scan behavior
 
