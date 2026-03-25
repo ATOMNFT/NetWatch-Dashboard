@@ -207,6 +207,10 @@ def infer_local_subnet() -> str:
         return '127.0.0.1'
 
 
+def split_targets(target: str) -> list[str]:
+    return [part.strip() for part in str(target).split(',') if part.strip()]
+
+
 def validate_target(target: str) -> str:
     target = target.strip()
     if not target:
@@ -215,7 +219,12 @@ def validate_target(target: str) -> str:
         raise ValueError('Target contains unsupported characters.')
     if len(target) > 200:
         raise ValueError('Target is too long.')
-    return target
+
+    parts = split_targets(target)
+    if not parts:
+        raise ValueError('Target is required.')
+
+    return ','.join(parts)
 
 
 def validate_custom_ports(custom_ports: str) -> str:
@@ -263,7 +272,9 @@ def build_nmap_command(target: str, settings: dict):
     else:
         cmd.extend(['--top-ports', DEFAULT_TOP_PORTS])
 
-    cmd.extend(['-oG', '-', target])
+    targets = split_targets(validate_target(target))
+    cmd.extend(['-oG', '-'])
+    cmd.extend(targets)
     return cmd
 
 
