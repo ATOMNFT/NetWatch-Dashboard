@@ -133,19 +133,16 @@ It is **not** a full authenticated vulnerability scanner and does not replace fo
 Create a `docker-compose.yml` file:
 
 ```yaml
-version: "3.8"
-
 services:
   netwatch:
     image: ghcr.io/atomnft/netwatch-dashboard:latest
     container_name: netwatch-dashboard
-    ports:
-      - "5000:5000"
-    restart: unless-stopped
     environment:
       - DEFAULT_SCAN_TARGET=192.168.1.0/24
       - DEFAULT_TOP_PORTS=200
       - APP_PORT=5000
       - SETTINGS_DIR=/app/data
+    network_mode: host
+    restart: unless-stopped
     volumes:
       - ./data:/app/data
