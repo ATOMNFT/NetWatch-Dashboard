@@ -135,7 +135,7 @@ Create a `docker-compose.yml` file:
 ```yaml
 services:
   netwatch:
-    image: ghcr.io/YOUR_GITHUB_USERNAME/netwatch-dashboard:v1
+    image: ghcr.io/###/netwatch-dashboard:v1
     container_name: netwatch-dashboard
     network_mode: host
     restart: unless-stopped
