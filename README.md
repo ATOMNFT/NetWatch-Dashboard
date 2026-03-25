@@ -135,7 +135,7 @@ Create a `docker-compose.yml` file:
 ```yaml
 services:
   netwatch:
-    image: ghcr.io/ATOMNFT/netwatch-dashboard:v1
+    image: ghcr.io/ATOMNFT/netwatch-dashboard:latest
     container_name: netwatch-dashboard
     network_mode: host
     restart: unless-stopped
