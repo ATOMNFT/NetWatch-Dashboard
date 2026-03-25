@@ -57,7 +57,6 @@ The Settings page allows you to configure:
 - recurring scan interval
 - persisted local settings
 
-![Settings View](./docs/images/)
 <img src="./docs/images/settings-view.png" alt="Settings View" width="80%" />
 
 ## Scan behavior
