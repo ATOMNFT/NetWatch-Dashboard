@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" href="{{ url_for('static', filename='img/favicon.ico') }}" />
+  <title>NetWatch Dashboard</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+</head>
+<body>
+  <div class="bg-grid"></div>
+  <div class="shell">
+    <header class="topbar glass">
+      <div class="topbar-main">
+        <div class="title-row">
+          <div class="brand-wrap">
+            <div class="brand-icon-shell glass-subtle">
+              <img class="brand-icon" src="{{ url_for('static', filename='img/plug-icon.png') }}" alt="NetWatch plug icon" />
+            </div>
+            <div>
+              <p class="eyebrow">v1 Stable</p>
+              <h1>NetWatch Dashboard</h1>
+            </div>
+          </div>
+          <nav class="view-tabs glass-subtle">
+            <button class="view-tab active" data-view="dashboard">Dashboard</button>
+            <button class="view-tab" data-view="settings">Settings</button>
+          </nav>
+        </div>
+        <div class="header-guide glass-subtle">
+          <ul>
+            <li><strong>Target guide:</strong> <strong>This Host</strong> checks only the machine running the dashboard. <strong>Single IP</strong> is best for a router, printer, NAS, or one workstation. <strong>Local Subnet</strong> is best for a full LAN sweep and will take the longest.</li>
+            <li><strong>How the scan works:</strong> This build runs service detection against the selected ports, then adds lightweight enrichment with reverse DNS, MAC vendor lookup, HTTP title checks on 80/443, and simple device-type heuristics to make host labels more useful.</li>
+            <li><strong>Using the actions:</strong> <strong>Start New Scan</strong> launches a new scan for the current target. <strong>Refresh / Clear Results</strong> wipes the dashboard back to an empty state. <strong>Export CSV</strong> downloads the current devices and findings for review.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="topbar-meta">
+        <span class="status-pill" id="runState">Idle</span>
+        <span class="muted" id="targetStatus">No active target</span>
+      </div>
+    </header>
+
+    <section id="dashboardView" class="page-view active">
+      <section class="summary-grid">
+        <article class="card glass stat-card">
+          <span class="stat-label">Hosts Up</span>
+          <strong id="hostsUp">0</strong>
+        </article>
+        <article class="card glass stat-card">
+          <span class="stat-label">Open Ports</span>
+          <strong id="openPorts">0</strong>
+        </article>
+        <article class="card glass stat-card">
+          <span class="stat-label">Alerts</span>
+          <strong id="alerts">0</strong>
+        </article>
+        <article class="card glass stat-card">
+          <span class="stat-label">Last Scan</span>
+          <strong id="lastScan">Never</strong>
+        </article>
+      </section>
+
+
+      <main class="main-grid">
+        <section class="card glass panel devices-panel">
+          <div class="panel-header">
+            <h2>Discovered Devices</h2>
+            <span class="panel-tag">Live inventory</span>
+          </div>
+          <div id="deviceList" class="device-list empty-state">No scan results yet.</div>
+        </section>
+
+        <section class="card glass panel controls-panel">
+          <div class="panel-header">
+            <h2>Scan Controls</h2>
+            <span class="panel-tag">Safe local scan</span>
+          </div>
+
+          <label class="field-label" for="targetInput">Target</label>
+          <input id="targetInput" class="target-input" type="text" value="{{ default_target }}" placeholder="192.168.1.0/24 or 192.168.1.10" />
+          <p class="helper">Examples: a single IP, comma-separated IPs, or a subnet like 192.168.1.0/24</p>
+
+          <div class="action-row">
+            <button id="scanBtn" class="btn primary">Start New Scan</button>
+            <button id="clearBtn" class="btn secondary">Refresh / Clear Results</button>
+            <a id="exportBtn" class="btn secondary export-link" href="/api/export.csv" download>Export CSV</a>
+          </div>
+
+          <div class="quick-actions">
+            <button class="chip" data-target="{{ default_target }}">Local Subnet</button>
+            <button class="chip" data-target="127.0.0.1">This Host</button>
+            <button class="chip" data-target="192.168.1.1">Single IP</button>
+          </div>
+
+          <div class="settings-hint glass-subtle">
+            <strong>Current scan profile:</strong>
+            <span id="scanProfileText">Top 200 ports</span>
+          </div>
+        </section>
+
+        <section class="card glass panel findings-panel">
+          <div class="panel-header">
+            <h2>Findings</h2>
+            <span class="panel-tag">Severity view</span>
+          </div>
+          <div id="findingsList" class="findings-list empty-state">Nothing flagged yet.</div>
+        </section>
+      </main>
+
+      <section class="card glass panel logs-panel">
+        <div class="panel-header">
+          <h2>Live Console</h2>
+          <span class="panel-tag">Scanner output</span>
+        </div>
+        <pre id="logConsole" class="log-console">Waiting for a scan…</pre>
+      </section>
+    </section>
+
+    <section id="settingsView" class="page-view">
+      <div class="settings-grid">
+        <section class="card glass panel">
+          <div class="panel-header">
+            <h2>Port Scan Settings</h2>
+            <span class="panel-tag">Used by all scans</span>
+          </div>
+
+          <label class="field-label" for="portMode">Port mode</label>
+          <select id="portMode" class="target-input select-input">
+            <option value="top200">Top 200 ports</option>
+            <option value="all">All ports</option>
+            <option value="custom">Custom comma-separated ports</option>
+          </select>
+          <p class="helper">Top 200 is the balanced default. All ports is the slowest. Custom accepts values like 22,80,443 or 1-1024,3389.</p>
+
+          <label class="field-label" for="customPorts">Custom ports</label>
+          <input id="customPorts" class="target-input" type="text" placeholder="22,80,443,3389" />
+          <p class="helper">Only used when Port mode is set to Custom.</p>
+        </section>
+
+        <section class="card glass panel">
+          <div class="panel-header">
+            <h2>Scheduled Scans</h2>
+            <span class="panel-tag">Recurring scans</span>
+          </div>
+
+          <label class="checkbox-row">
+            <input id="scheduledEnabled" type="checkbox" />
+            <span>Enable interval scanning</span>
+          </label>
+
+          <label class="field-label" for="scheduledTargets">Scheduled target IPs / range</label>
+          <input id="scheduledTargets" class="target-input" type="text" placeholder="192.168.1.1,192.168.1.10 or 192.168.1.0/24" />
+          <p class="helper">Use one IP, a comma-separated list, or a subnet. The scheduler reuses your current port mode.</p>
+
+          <label class="field-label" for="scheduledInterval">Run every (minutes)</label>
+          <input id="scheduledInterval" class="target-input" type="number" min="1" max="10080" step="1" value="60" />
+          <p class="helper">1 minute minimum. Example: 15 for quick checks, 60 for hourly scans.</p>
+
+          <div class="scheduler-status glass-subtle">
+            <div><strong>Last scheduled run:</strong> <span id="lastScheduledRun">Never</span></div>
+            <div><strong>Next scheduled run:</strong> <span id="nextScheduledRun">Disabled</span></div>
+          </div>
+        </section>
+      </div>
+
+      <section class="card glass panel settings-actions-panel">
+        <div class="panel-header">
+          <h2>Save Settings</h2>
+          <span class="panel-tag">Persisted locally</span>
+        </div>
+        <p class="helper">These settings are stored in the app data folder and used for both manual scans and interval scans.</p>
+        <div class="action-row">
+          <button id="saveSettingsBtn" class="btn primary">Save Settings</button>
+          <button id="reloadSettingsBtn" class="btn secondary">Reload Saved Settings</button>
+        </div>
+      </section>
+    </section>
+  </div>
+
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
