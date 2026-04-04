@@ -1,7 +1,7 @@
 services:
   netwatch:
-    image: ghcr.io/atomnft/netwatch-dashboard:latest
     container_name: netwatch-dashboard
+    image: ghcr.io/atomnft/netwatch-dashboard:latest
     environment:
       - DEFAULT_SCAN_TARGET=192.168.1.0/24
       - DEFAULT_TOP_PORTS=200
@@ -11,3 +11,9 @@ services:
     restart: unless-stopped
     volumes:
       - ./data:/app/data
+    healthcheck:
+      test: ["CMD", "python", "-c", "import os,sys,urllib.request; port=os.getenv('APP_PORT','4998'); urllib.request.urlopen(f'http://127.0.0.1:{port}/', timeout=3); sys.exit(0)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
