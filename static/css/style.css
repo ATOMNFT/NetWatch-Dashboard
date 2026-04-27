@@ -381,3 +381,138 @@ h3 { font-size: 0.95rem; }
   .action-row { flex-direction: column; }
   .topbar-meta { align-items: flex-start; justify-content: flex-start; }
 }
+
+
+.map-panel { min-height: 620px; }
+.map-helper { margin-top: 6px; max-width: 760px; }
+.map-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(300px, 0.75fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.map-canvas-wrap { min-width: 0; }
+.network-map {
+  position: relative;
+  border-radius: 24px;
+  border: 1px solid rgba(76, 255, 179, 0.1);
+  background: radial-gradient(circle at top, rgba(18, 54, 43, 0.42), rgba(4, 10, 8, 0.92) 62%);
+  padding: 22px;
+  min-height: 520px;
+  overflow: hidden;
+}
+
+.network-map-hub {
+  display: grid;
+  place-items: center;
+  margin-bottom: 20px;
+  min-height: 150px;
+  position: relative;
+}
+
+.hub-ring {
+  position: absolute;
+  width: 180px;
+  height: 180px;
+  border-radius: 999px;
+  border: 1px solid rgba(72, 255, 180, 0.16);
+  box-shadow: 0 0 48px rgba(72, 255, 180, 0.1), inset 0 0 40px rgba(72, 255, 180, 0.04);
+}
+
+.hub-core {
+  position: relative;
+  z-index: 1;
+  width: 124px;
+  height: 124px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  background: radial-gradient(circle at top, rgba(72,255,180,0.28), rgba(7,18,16,0.96) 68%);
+  border: 1px solid rgba(72, 255, 180, 0.18);
+  box-shadow: 0 0 32px rgba(72,255,180,0.14);
+}
+
+.hub-core strong { display: block; font-size: 1.15rem; }
+.hub-label { color: var(--green); font-size: 0.78rem; letter-spacing: 0.12em; text-transform: uppercase; }
+
+.map-groups {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.map-group {
+  border: 1px solid rgba(76, 255, 179, 0.1);
+  border-radius: 20px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0.02));
+  padding: 16px;
+}
+
+.map-group-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.map-group-count {
+  min-width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  display: inline-grid;
+  place-items: center;
+  font-size: 0.84rem;
+  color: var(--text);
+  border: 1px solid rgba(76, 255, 179, 0.12);
+  background: rgba(255,255,255,0.035);
+}
+
+.map-node-grid { display: grid; gap: 10px; }
+.map-node {
+  width: 100%;
+  text-align: left;
+  padding: 14px;
+  border-radius: 18px;
+  border: 1px solid rgba(76, 255, 179, 0.1);
+  background: rgba(255,255,255,0.03);
+  color: var(--text);
+  cursor: pointer;
+  transition: 0.18s ease;
+}
+.map-node:hover { transform: translateY(-1px); }
+.map-node.active {
+  box-shadow: 0 0 0 1px rgba(72,255,180,0.16), 0 0 22px rgba(72,255,180,0.12);
+  border-color: rgba(72,255,180,0.24);
+}
+.map-node-title, .map-node-sub, .map-node-meta { display: block; }
+.map-node-title { font-weight: 700; }
+.map-node-sub, .map-node-meta { color: var(--muted); margin-top: 4px; font-size: 0.84rem; }
+.map-node.gateway { border-color: rgba(72,255,180,0.22); }
+.map-node.server { border-color: rgba(130, 196, 255, 0.18); }
+.map-node.endpoint { border-color: rgba(255,255,255,0.08); }
+.map-node.printer { border-color: rgba(255, 209, 102, 0.18); }
+.map-node.camera { border-color: rgba(255, 111, 145, 0.18); }
+
+.map-sidebar { padding: 16px; }
+.map-sidebar-block + .map-sidebar-block { margin-top: 18px; }
+.map-sidebar-label { color: var(--muted); font-size: 0.84rem; text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 10px; }
+.map-focus-card { min-height: 180px; }
+.map-focus-top { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; }
+.map-legend { display: flex; flex-wrap: wrap; gap: 10px; }
+.legend-chip { padding: 9px 12px; border-radius: 999px; border: 1px solid rgba(76,255,179,0.1); background: rgba(255,255,255,0.03); font-size: 0.84rem; }
+.legend-chip.gateway { color: var(--green); }
+.legend-chip.server { color: #9ed0ff; }
+.legend-chip.endpoint { color: var(--text); }
+.legend-chip.printer { color: var(--yellow); }
+.legend-chip.camera { color: var(--red); }
+.map-empty-slot { color: var(--muted); font-size: 0.9rem; padding: 10px 0 4px; }
+
+@media (max-width: 1180px) {
+  .map-layout,
+  .map-groups {
+    grid-template-columns: 1fr;
+  }
+}

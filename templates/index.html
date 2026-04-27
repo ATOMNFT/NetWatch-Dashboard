@@ -24,6 +24,7 @@
           </div>
           <nav class="view-tabs glass-subtle">
             <button class="view-tab active" data-view="dashboard">Dashboard</button>
+            <button class="view-tab" data-view="map">Network Map</button>
             <button class="view-tab" data-view="settings">Settings</button>
           </nav>
         </div>
@@ -114,6 +115,42 @@
           <span class="panel-tag">Scanner output</span>
         </div>
         <pre id="logConsole" class="log-console">Waiting for a scan…</pre>
+      </section>
+    </section>
+
+    <section id="mapView" class="page-view">
+      <section class="card glass panel map-panel">
+        <div class="panel-header">
+          <div>
+            <h2>Network Map</h2>
+            <p class="helper map-helper">A visual grouping of discovered devices by likely role. Click any node to focus its details.</p>
+          </div>
+          <span class="panel-tag">Visual topology</span>
+        </div>
+
+        <div class="map-layout">
+          <div class="map-canvas-wrap">
+            <div id="networkMap" class="network-map empty-state">Run a scan to generate the network map.</div>
+          </div>
+
+          <aside class="map-sidebar glass-subtle">
+            <div class="map-sidebar-block">
+              <div class="map-sidebar-label">Focused device</div>
+              <div id="mapFocusCard" class="map-focus-card muted">Click a node in the map to inspect its device details.</div>
+            </div>
+
+            <div class="map-sidebar-block">
+              <div class="map-sidebar-label">Map legend</div>
+              <div class="map-legend">
+                <span class="legend-chip gateway">Gateway / Network</span>
+                <span class="legend-chip server">Servers / NAS</span>
+                <span class="legend-chip endpoint">Endpoints</span>
+                <span class="legend-chip printer">Printers</span>
+                <span class="legend-chip camera">Cameras / IoT</span>
+              </div>
+            </div>
+          </aside>
+        </div>
       </section>
     </section>
 

@@ -22,9 +22,12 @@ const els = {
   reloadSettingsBtn: document.getElementById('reloadSettingsBtn'),
   lastScheduledRun: document.getElementById('lastScheduledRun'),
   nextScheduledRun: document.getElementById('nextScheduledRun'),
+  networkMap: document.getElementById('networkMap'),
+  mapFocusCard: document.getElementById('mapFocusCard'),
   tabs: Array.from(document.querySelectorAll('.view-tab')),
   views: {
     dashboard: document.getElementById('dashboardView'),
+    map: document.getElementById('mapView'),
     settings: document.getElementById('settingsView'),
   },
 };
@@ -70,6 +73,136 @@ function profileSummary(settings) {
   if (mode === 'all') return 'All ports';
   if (mode === 'custom') return `Custom ports: ${settings?.custom_ports || 'Not set'}`;
   return 'Top 200 ports';
+}
+
+let lastDevices = [];
+let selectedMapDeviceKey = '';
+
+function getDeviceKey(device) {
+  return device?.mac || device?.ip || device?.display_name || '';
+}
+
+function mapGroup(device) {
+  const type = (device?.device_type || '').toLowerCase();
+  const title = (device?.display_name || '').toLowerCase();
+  if (type.includes('router') || type.includes('gateway') || type.includes('network appliance') || title.includes('router') || title.includes('gateway')) return 'gateway';
+  if (type.includes('nas') || type.includes('server') || type.includes('linux') || type.includes('windows host') || type.includes('web server')) return 'server';
+  if (type.includes('printer')) return 'printer';
+  if (type.includes('camera') || type.includes('iot')) return 'camera';
+  return 'endpoint';
+}
+
+function mapGroupLabel(group) {
+  return ({
+    gateway: 'Gateway / Network',
+    server: 'Servers / NAS',
+    endpoint: 'Endpoints',
+    printer: 'Printers',
+    camera: 'Cameras / IoT',
+  })[group] || 'Other Devices';
+}
+
+function deviceMetaLine(device) {
+  return [
+    device?.ip || '',
+    `${device?.port_count || 0} open ports`,
+    device?.vendor || '',
+    device?.hostname && device.hostname !== device.display_name ? `Host: ${device.hostname}` : ''
+  ].filter(Boolean).map(escapeHtml).join(' · ');
+}
+
+function renderMapFocus(device) {
+  if (!els.mapFocusCard) return;
+  if (!device) {
+    els.mapFocusCard.className = 'map-focus-card muted';
+    els.mapFocusCard.innerHTML = 'Click a node in the map to inspect its device details.';
+    return;
+  }
+
+  const ports = device.ports?.length
+    ? device.ports.map((p) => `<span class="port-pill">${escapeHtml(p.port)}/${escapeHtml(p.proto)} · ${escapeHtml(p.service)}</span>`).join('')
+    : '<span class="port-pill">No open ports in configured scan range</span>';
+
+  const detailBits = [
+    device?.device_type || '',
+    device?.mac ? `MAC: ${device.mac}` : '',
+    device?.http_title ? `HTTP: ${device.http_title}` : ''
+  ].filter(Boolean).map(escapeHtml).join(' · ');
+
+  els.mapFocusCard.className = 'map-focus-card';
+  els.mapFocusCard.innerHTML = `
+    <div class="map-focus-top">
+      <div>
+        <div class="device-title">${escapeHtml(device.display_name || device.hostname || device.ip)}</div>
+        <div class="device-sub">${deviceMetaLine(device)}</div>
+        ${detailBits ? `<div class="device-detail">${detailBits}</div>` : ''}
+      </div>
+      ${severityBadge(device.severity || 'low')}
+    </div>
+    <div class="device-ports">${ports}</div>
+  `;
+}
+
+function renderNetworkMap(devices) {
+  if (!els.networkMap) return;
+  lastDevices = Array.isArray(devices) ? devices : [];
+
+  if (!lastDevices.length) {
+    els.networkMap.className = 'network-map empty-state';
+    els.networkMap.innerHTML = 'Run a scan to generate the network map.';
+    renderMapFocus(null);
+    return;
+  }
+
+  const groups = { gateway: [], server: [], endpoint: [], printer: [], camera: [] };
+  lastDevices.forEach((device) => {
+    groups[mapGroup(device)].push(device);
+  });
+
+  const sections = Object.entries(groups).map(([group, items]) => `
+    <section class="map-group ${group}">
+      <div class="map-group-header">
+        <h3>${mapGroupLabel(group)}</h3>
+        <span class="map-group-count">${items.length}</span>
+      </div>
+      <div class="map-node-grid">
+        ${items.length ? items.map((device) => {
+          const key = getDeviceKey(device);
+          const active = key && key === selectedMapDeviceKey ? ' active' : '';
+          return `
+            <button class="map-node ${group}${active}" type="button" data-device-key="${escapeHtml(key)}">
+              <span class="map-node-title">${escapeHtml(device.display_name || device.hostname || device.ip)}</span>
+              <span class="map-node-sub">${escapeHtml(device.ip || '')}</span>
+              <span class="map-node-meta">${escapeHtml(device.device_type || 'General Host')}</span>
+            </button>
+          `;
+        }).join('') : '<div class="map-empty-slot">No devices in this group.</div>'}
+      </div>
+    </section>
+  `).join('');
+
+  els.networkMap.className = 'network-map';
+  els.networkMap.innerHTML = `
+    <div class="network-map-hub">
+      <div class="hub-ring"></div>
+      <div class="hub-core">
+        <span class="hub-label">NetWatch</span>
+        <strong>${lastDevices.length} devices</strong>
+      </div>
+    </div>
+    <div class="map-groups">${sections}</div>
+  `;
+
+  const fallbackDevice = lastDevices.find((d) => getDeviceKey(d) === selectedMapDeviceKey) || lastDevices[0];
+  selectedMapDeviceKey = getDeviceKey(fallbackDevice);
+  renderMapFocus(fallbackDevice);
+
+  els.networkMap.querySelectorAll('.map-node').forEach((node) => {
+    node.addEventListener('click', () => {
+      selectedMapDeviceKey = node.dataset.deviceKey || '';
+      renderNetworkMap(lastDevices);
+    });
+  });
 }
 
 function renderDevices(devices) {
@@ -191,6 +324,7 @@ async function refreshStatus() {
     const state = await api('/api/status');
     renderSummary(state.summary, state.running, state.target);
     renderDevices(state.devices);
+    renderNetworkMap(state.devices);
     renderFindings(state.findings);
     renderLogs(state.logs);
     renderSettings(state.settings || {}, state.scheduler || {});
