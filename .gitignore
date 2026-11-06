@@ -4,3 +4,6 @@ data/settings.json
 .env
 .DS_Store
 Thumbs.db
+data/*.sqlite3
+data/*.sqlite3-*
+.pytest_cache/
