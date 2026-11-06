@@ -1,8 +1,8 @@
 """Persistent, local-only Network Guardian scan history and device inventory."""
-import ipaddress
 import json
 import os
 import sqlite3
+from contextlib import contextmanager
 import threading
 from datetime import datetime, timezone
 
@@ -10,12 +10,17 @@ DB_PATH = os.path.join(os.getenv("SETTINGS_DIR", "/app/data"), "guardian.sqlite3
 DB_LOCK = threading.RLock()
 
 
+@contextmanager
 def connect():
     os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
     con = sqlite3.connect(DB_PATH, timeout=15)
-    con.row_factory = sqlite3.Row
-    con.execute("PRAGMA busy_timeout=15000")
-    return con
+    try:
+        con.row_factory = sqlite3.Row
+        con.execute("PRAGMA busy_timeout=15000")
+        with con:
+            yield con
+    finally:
+        con.close()
 
 
 def init_db():
