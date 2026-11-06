@@ -18,12 +18,13 @@
               <img class="brand-icon" src="{{ url_for('static', filename='img/plug-icon.png') }}" alt="NetWatch plug icon" />
             </div>
             <div>
-              <p class="eyebrow">v1.0.1</p>
+              <p class="eyebrow">v1.1.0-dev · Network Guardian</p>
               <h1>NetWatch Dashboard</h1>
             </div>
           </div>
           <nav class="view-tabs glass-subtle">
             <button class="view-tab active" data-view="dashboard">Dashboard</button>
+            <button class="view-tab" data-view="guardian">Network Guardian</button>
             <button class="view-tab" data-view="map">Network Map</button>
             <button class="view-tab" data-view="settings">Settings</button>
           </nav>
@@ -115,6 +116,37 @@
           <span class="panel-tag">Scanner output</span>
         </div>
         <pre id="logConsole" class="log-console">Waiting for a scan…</pre>
+      </section>
+    </section>
+
+
+    <section id="guardianView" class="page-view">
+      <section class="card glass panel guardian-panel">
+        <div class="panel-header">
+          <div>
+            <h2>Network Guardian</h2>
+            <p class="helper">Review saved scans, trusted devices, and network changes. Your first successful scan creates the baseline.</p>
+          </div>
+          <span class="panel-tag">Persistent monitoring</span>
+        </div>
+        <div class="guardian-stats">
+          <div class="glass-subtle guardian-stat"><span class="stat-label">Devices online</span><strong id="guardianOnline">0</strong></div>
+          <div class="glass-subtle guardian-stat"><span class="stat-label">Trusted</span><strong id="guardianTrusted">0</strong></div>
+          <div class="glass-subtle guardian-stat"><span class="stat-label">Unknown</span><strong id="guardianUnknown">0</strong></div>
+        </div>
+        <p class="helper">Latest stored scan: <span id="guardianLastScan">Never</span> · Target: <span id="guardianTarget">None</span></p>
+        <div class="guardian-layout">
+          <div>
+            <h3>Known Devices</h3>
+            <p class="helper">Mark devices as trusted and give them a friendly name. Untrusted means unreviewed, not necessarily malicious.</p>
+            <div id="guardianDevices" class="device-list guardian-list">Run a scan to establish a baseline.</div>
+          </div>
+          <div>
+            <h3>Recent Network Changes</h3>
+            <p class="helper">New devices, missing hosts, and detected port changes since the previous successful scan of the same target.</p>
+            <div id="guardianEvents" class="findings-list guardian-list">No changes recorded yet.</div>
+          </div>
+        </div>
       </section>
     </section>
 
