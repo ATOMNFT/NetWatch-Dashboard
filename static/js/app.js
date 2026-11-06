@@ -27,6 +27,7 @@ const els = {
   tabs: Array.from(document.querySelectorAll('.view-tab')),
   views: {
     dashboard: document.getElementById('dashboardView'),
+    guardian: document.getElementById('guardianView'),
     map: document.getElementById('mapView'),
     settings: document.getElementById('settingsView'),
   },
@@ -317,6 +318,7 @@ function setActiveView(name) {
     node.classList.toggle('active', key === name);
   });
   els.tabs.forEach((tab) => tab.classList.toggle('active', tab.dataset.view === name));
+  if (name === 'guardian' && window.refreshGuardian) window.refreshGuardian();
 }
 
 async function refreshStatus() {
@@ -328,6 +330,7 @@ async function refreshStatus() {
     renderFindings(state.findings);
     renderLogs(state.logs);
     renderSettings(state.settings || {}, state.scheduler || {});
+    if (els.views.guardian.classList.contains('active') && window.refreshGuardian) await window.refreshGuardian();
     els.scanBtn.disabled = !!state.running;
     els.clearBtn.disabled = !!state.running;
     els.scanBtn.textContent = state.running ? 'Scanning…' : 'Start New Scan';
