@@ -7,12 +7,15 @@ services:
       - DEFAULT_TOP_PORTS=200
       - APP_PORT=4998
       - SETTINGS_DIR=/app/data
+      # Optional: set NETWATCH_PASSWORD in a local .env to require login
+      - NETWATCH_USERNAME=${NETWATCH_USERNAME:-admin}
+      - NETWATCH_PASSWORD=${NETWATCH_PASSWORD:-}
     network_mode: host
     restart: unless-stopped
     volumes:
       - ./data:/app/data
     healthcheck:
-      test: ["CMD", "python", "-c", "import os,sys,urllib.request; port=os.getenv('APP_PORT','4998'); urllib.request.urlopen(f'http://127.0.0.1:{port}/', timeout=3); sys.exit(0)"]
+      test: ["CMD", "python", "-c", "import os,sys,urllib.request; port=os.getenv('APP_PORT','4998'); urllib.request.urlopen(f'http://127.0.0.1:{port}/healthz', timeout=3); sys.exit(0)"]
       interval: 30s
       timeout: 5s
       retries: 3
