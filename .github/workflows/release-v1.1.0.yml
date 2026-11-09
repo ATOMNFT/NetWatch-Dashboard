@@ -36,14 +36,6 @@ jobs:
       - name: Build versioned Docker image
         run: |
           docker build -t ghcr.io/atomnft/netwatch-dashboard:1.1.0 -t ghcr.io/atomnft/netwatch-dashboard:latest .
-      - name: Sign in to GHCR
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: echo "$GH_TOKEN" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
-      - name: Push versioned and latest Docker tags
-        run: |
-          docker push ghcr.io/atomnft/netwatch-dashboard:1.1.0
-          docker push ghcr.io/atomnft/netwatch-dashboard:latest
       - name: Publish GitHub release and v1.1.0 tag
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -55,3 +47,11 @@ jobs:
               --title "NetWatch-Dashboard v1.1.0 — Network Guardian" \
               --notes-file docs/releases/v1.1.0.md
           fi
+      - name: Sign in to GHCR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: echo "$GH_TOKEN" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+      - name: Push versioned and latest Docker tags
+        run: |
+          docker push ghcr.io/atomnft/netwatch-dashboard:1.1.0
+          docker push ghcr.io/atomnft/netwatch-dashboard:latest
