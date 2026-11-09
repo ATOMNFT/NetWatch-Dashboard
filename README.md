@@ -1,8 +1,14 @@
-# NetWatch-Dashboard v1.0.1
+# NetWatch-Dashboard v1.1.0-dev
 
 NetWatch-Dashboard is a lightweight local network visibility and review tool built for self-hosting with Docker. It provides a clean web UI for discovering hosts, reviewing open ports and detected services, applying lightweight enrichment, exporting results to CSV, and running recurring scans on your internal network.
 
 <img src="./docs/images/dashboard-overview.png" alt="NetWatch Dashboard Overview" width="80%" />
+
+## Development: Network Guardian
+
+The development branch includes a **Network Guardian** tab with persistent SQLite scan history, change detection (new/missing devices, changed ports, IP changes when MAC is available), trusted device profiles, and friendly device names. It also adds optional HTTP Basic login protection, Docker build fixes, and automated test checks.
+
+Read [Network Guardian setup and limitations](docs/network-guardian.md) before deploying. The first successful scan of a target establishes a baseline; changes are detected from subsequent successful scans of that same target. This is not continuous network intrusion monitoring.
 
 ## What it does
 
@@ -143,9 +149,12 @@ services:
     environment:
       - DEFAULT_SCAN_TARGET=192.168.1.0/24
       - DEFAULT_TOP_PORTS=200
-      - APP_PORT=5000
+      - APP_PORT=4998
       - SETTINGS_DIR=/app/data
     network_mode: host
     restart: unless-stopped
     volumes:
       - ./data:/app/data
+```
+
+> Optional: set `NETWATCH_USERNAME` and `NETWATCH_PASSWORD` in the Compose environment to enable HTTP Basic authentication. Use HTTPS via a trusted reverse proxy for access beyond a trusted LAN.

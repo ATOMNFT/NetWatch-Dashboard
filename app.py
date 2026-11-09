@@ -1,4 +1,7 @@
 from flask import Flask, Response, jsonify, render_template, request
+from guardian import init_db, guardian_status, record_scan, update_profile
+import hmac
+from urllib.parse import urlparse
 import csv
 import io
 import ipaddress
@@ -18,6 +21,8 @@ from datetime import datetime
 app = Flask(__name__)
 
 APP_PORT = int(os.getenv('APP_PORT', '4998'))
+NETWATCH_PASSWORD = os.getenv('NETWATCH_PASSWORD', '')
+NETWATCH_USERNAME = os.getenv('NETWATCH_USERNAME', 'admin')
 DEFAULT_TOP_PORTS = os.getenv('DEFAULT_TOP_PORTS', '200')
 MAC_PREFIX_FILE = '/usr/share/nmap/nmap-mac-prefixes'
 UNKNOWN_HOST_LABELS = {'', 'unknown host', 'unknown'}
@@ -64,6 +69,40 @@ SETTINGS_STATE = {
 }
 
 LOCK = threading.Lock()
+
+
+@app.before_request
+def protect_dashboard():
+    if request.path == '/healthz' and request.remote_addr in ('127.0.0.1', '::1'):
+        return None
+    if NETWATCH_PASSWORD:
+        auth = request.authorization
+        if not auth or not (hmac.compare_digest(auth.username or '', NETWATCH_USERNAME)
+                            and hmac.compare_digest(auth.password or '', NETWATCH_PASSWORD)):
+            return Response('NetWatch authentication required', 401,
+                            {'WWW-Authenticate': 'Basic realm="NetWatch"'})
+    # Refuse cross-site browser writes; command-line clients without Origin remain supported.
+    if request.method in ('POST', 'PUT', 'PATCH', 'DELETE'):
+        origin = request.headers.get('Origin')
+        if origin and urlparse(origin).netloc != request.host:
+            return jsonify({'ok': False, 'error': 'Cross-origin write rejected'}), 403
+        if request.headers.get('Sec-Fetch-Site') == 'cross-site':
+            return jsonify({'ok': False, 'error': 'Cross-site request rejected'}), 403
+    return None
+
+
+@app.after_request
+def add_security_headers(response):
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['X-Frame-Options'] = 'SAMEORIGIN'
+    response.headers['Referrer-Policy'] = 'same-origin'
+    response.headers['Content-Security-Policy'] = "default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'; img-src 'self' data:"
+    return response
+
+
+@app.route('/healthz')
+def healthz():
+    return jsonify({'ok': True})
 
 
 def log(message: str) -> None:
@@ -601,8 +640,16 @@ def run_scan(target: str, launched_by: str = 'manual') -> None:
         proc = subprocess.run(cmd, capture_output=True, text=True, timeout=900)
         if proc.stderr.strip():
             log(proc.stderr.strip())
+        if proc.returncode != 0:
+            log(f'Nmap exited with status {proc.returncode}. Scan results were not saved.')
+            return
         devices, findings, total_ports = parse_grepable_output(proc.stdout)
         devices, findings = enrich_devices(devices, findings)
+        try:
+            change_count = record_scan(target, devices, findings)
+            log(f'Network Guardian saved scan and detected {change_count} changes.')
+        except Exception as exc:
+            log(f'Network Guardian database error: {exc}')
 
         with LOCK:
             SCAN_STATE['devices'] = devices
@@ -677,6 +724,28 @@ def status():
     payload['scheduler'] = scheduler
     payload['settings'] = settings
     return jsonify(payload)
+
+
+@app.route('/api/guardian')
+def guardian():
+    target = request.args.get('target', '').strip()
+    if target:
+        try:
+            target = validate_target(target)
+        except ValueError as exc:
+            return jsonify({'ok': False, 'error': str(exc)}), 400
+    return jsonify({'ok': True, **guardian_status(target or None)})
+
+
+@app.route('/api/guardian/profile', methods=['POST'])
+def guardian_profile():
+    data = request.get_json(silent=True) or {}
+    try:
+        update_profile(data.get('device_key'), data.get('trusted'),
+                       data.get('display_name', ''), data.get('notes', ''))
+    except ValueError as exc:
+        return jsonify({'ok': False, 'error': str(exc)}), 400
+    return jsonify({'ok': True})
 
 
 @app.route('/api/scan', methods=['POST'])
@@ -781,6 +850,7 @@ def export_csv():
     )
 
 
+init_db()
 load_settings()
 threading.Thread(target=scheduler_loop, daemon=True).start()
 
